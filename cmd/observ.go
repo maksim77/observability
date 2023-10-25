@@ -14,15 +14,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gitlab.services.mts.ru/teta/golang-for-university/observability/internal/logger"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 	"moul.io/chizap"
 )
 
 const (
-	DSN = "https://9cb3a25fd4b9a73e6630f86c06a10208@o599355.ingest.sentry.io/4506109917134848"
+	DSN         = "https://9cb3a25fd4b9a73e6630f86c06a10208@o599355.ingest.sentry.io/4506109917134848"
+	TRACER_NAME = "demo_service"
 )
 
 func someFunc(ctx context.Context) {
+	_, span := tracer.Start(ctx, "someFunc")
+	defer span.End()
+
 	logger := zapctx.Logger(ctx)
 	time.Sleep(1 * time.Second)
 	logger.Info("Hi from SomeFunc")
@@ -34,7 +39,12 @@ func someFuncWithError(ctx context.Context) error {
 	return errors.New("Oops... one more error")
 }
 
+var tracer = otel.Tracer(TRACER_NAME)
+
 func main() {
+	shutdown := initProvider()
+	defer shutdown()
+
 	r := chi.NewRouter()
 
 	logger, err := logger.GetLogger(false, DSN, "production")
@@ -55,8 +65,11 @@ func main() {
 	})
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		newCtx, span := tracer.Start(r.Context(), "/")
+		defer span.End()
+
 		counter.Inc()
-		ctx := zapctx.WithLogger(r.Context(), logger)
+		ctx := zapctx.WithLogger(newCtx, logger)
 		someFunc(ctx)
 		_, err := w.Write([]byte("welcome"))
 		if err != nil {
