@@ -1,3 +1,5 @@
+github.com/TheZeroSlave/zapsentry v1.18.0 h1:42dJES1ZVR/WvRLwFZN4otaXv9dshlc2rumsUuz2Rlg=
+github.com/TheZeroSlave/zapsentry v1.18.0/go.mod h1:D1YMfSuu6xnkhwFXxrronesmsiyDhIqo+86I3Ok+r64=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

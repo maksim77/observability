@@ -1,11 +1,43 @@
 package logger
 
-import "go.uber.org/zap"
+import (
+	"github.com/TheZeroSlave/zapsentry"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
 
-func GetLogger(debug bool) (*zap.Logger, error) {
+func GetLogger(debug bool, sentryDSN, env string) (*zap.Logger, error) {
+	var err error
+	var l *zap.Logger
+
 	if debug {
-		return zap.NewDevelopment()
+		l, err = zap.NewDevelopment()
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		return zap.NewProduction()
+		l, err = zap.NewProduction()
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	cfg := zapsentry.Configuration{
+		Level: zapcore.ErrorLevel,
+		Tags: map[string]string{
+			"environment": env,
+			"app":         "demoApp",
+		},
+	}
+	core, err := zapsentry.NewCore(cfg, zapsentry.NewSentryClientFromDSN(sentryDSN))
+	if err != nil {
+		return nil, err
+	}
+
+	l = zapsentry.AttachCoreToLogger(core, l)
+	defer func() {
+		_ = l.Sync()
+	}()
+
+	return l, err
 }
