@@ -10,6 +10,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/juju/zaputil/zapctx"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gitlab.services.mts.ru/teta/golang-for-university/observability/internal/logger"
 	"go.uber.org/zap"
 	"moul.io/chizap"
@@ -47,7 +50,12 @@ func main() {
 		WithUserAgent: true,
 	}))
 
+	counter := promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "teta", Name: "testcounter", Help: "Main endpoint request counter",
+	})
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		counter.Inc()
 		ctx := zapctx.WithLogger(r.Context(), logger)
 		someFunc(ctx)
 		_, err := w.Write([]byte("welcome"))
@@ -68,6 +76,9 @@ func main() {
 			logger.Error("Error writing response", zap.Error(err))
 		}
 	})
+
+	http.Handle("/metrics", promhttp.Handler())
+	go http.ListenAndServe(":9000", nil) //nolint:errcheck
 
 	logger.Info("Server started")
 	http.ListenAndServe(":8080", r) //nolint:errcheck
