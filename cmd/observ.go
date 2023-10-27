@@ -7,12 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/juju/zaputil/zapctx"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/riandyrn/otelchi"
 	"gitlab.services.mts.ru/teta/golang-for-university/observability/internal/logger"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
@@ -46,6 +47,7 @@ func main() {
 	defer shutdown()
 
 	r := chi.NewRouter()
+	r.Use(otelchi.Middleware("main", otelchi.WithChiRoutes(r)))
 
 	logger, err := logger.GetLogger(false, DSN, "production")
 	if err != nil {
